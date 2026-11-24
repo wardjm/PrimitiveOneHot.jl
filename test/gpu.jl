@@ -15,6 +15,8 @@
     @test coa[:, :,  1] isa OneHotArray && parent(coa[:, :,  1]) isa GpuArray
     
     @test adapt(Array, LinearAlgebra.tril(coa[:,:,1])) == LinearAlgebra.tril(collect(oa[:,:,1]))
+    @test adapt(Array, LinearAlgebra.triu(coa[:,:,1], 1)) == LinearAlgebra.triu(collect(oa[:,:,1]), 1)
+    @test LinearAlgebra.tril(coa[:,:,1]) isa GpuArray
 
     @test sprint(Base.print_array, coa) == sprint(Base.print_array, oa)
 

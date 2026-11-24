@@ -147,7 +147,9 @@ function Base.findmax(oa::OneHotArray; dims=:)
         function f1(x, cidx)
             iszero(x) ? CartesianIndex(1, cidx) : CartesianIndex(Int(x), cidx)
         end
-        is = map(f1, onehots, CartesianIndices(onehots))
+        # broadcast rather than map: map over a GPU array zipped with CartesianIndices
+        # falls back to scalar iteration
+        is = f1.(onehots, CartesianIndices(onehots))
         return (reshape(vs, 1, size(vs)...), reshape(is, 1, size(is)...))
     else
         return findminmax(>, oa; init=false, dims=dims)
@@ -174,6 +176,15 @@ function findminmax(binop, a::OneHotArray; init, dims)
         return (vals, inds)
     end
 end
+
+# tril / triu
+# LinearAlgebra's generic fallbacks use `copytrito!`, which scalar-indexes and fails on GPU.
+# Densify with a broadcast (stays on device) and use the in-place dense kernels instead.
+
+import LinearAlgebra
+_dense(oa::OneHotArray) = copyto!(similar(oa, Bool), oa)
+LinearAlgebra.tril(oa::OneHotMatrix, k::Integer = 0) = LinearAlgebra.tril!(_dense(oa), k)
+LinearAlgebra.triu(oa::OneHotMatrix, k::Integer = 0) = LinearAlgebra.triu!(_dense(oa), k)
 
 # adapt
 

@@ -34,4 +34,12 @@
   @test reshape(oa, 50, :) isa Base.ReshapedArray{Bool, 2}
   @test reshape(oa, 5, 10, 5) isa Base.ReshapedArray{Bool, 3}
 
+
+  import LinearAlgebra
+  om = OneHotArray(10, rand(1:10, 7))
+  for k in (-2, 0, 3)
+    @test LinearAlgebra.tril(om, k) == LinearAlgebra.tril(collect(om), k)
+    @test LinearAlgebra.triu(om, k) == LinearAlgebra.triu(collect(om), k)
+  end
+  @test LinearAlgebra.tril(om) isa Matrix{Bool}
 end
